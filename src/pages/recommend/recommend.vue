@@ -1,38 +1,54 @@
 <template>
   <div class="recommend">
-    <div class="recommend-content">
-      <div v-if="recommends.length" class="slider-wrapper">
-        <slider>
-          <div v-for="item of recommends" :key="item.id">
-            <a :href="item.linkUrl">
-              <img :src="item.picUrl" alt="">
-            </a>
-          </div>
-        </slider>
-      </div>
-      <div class="recommend-list">
-        <h1 class="list-title">热门推荐</h1>
-        <ul></ul>
-      </div>
+    <scroll ref="scroll" class="recommend-content" :data="discList">
+      <div>
+        <div v-if="recommends.length" class="slider-wrapper">
+          <slider>
+            <div v-for="item of recommends" :key="item.id">
+              <a :href="item.linkUrl">
+                <img @load="loadImage" :src="item.picUrl" alt="">
+              </a>
+            </div>
+          </slider>
+        </div>
+        <div class="recommend-list">
+          <h1 class="list-title">热门推荐</h1>
+          <ul>
+            <li v-for="item of discList" :key="item.id" class="item">
+              <div class="icon">
+                <img :src="item.imgurl" alt="" width="60" height="60">
+              </div>
+              <div class="text">
+                <h2 class="name" v-html="item.creator.name"></h2>
+                <p class="desc" v-html="item.dissname"></p>
+              </div>
+            </li>
+          </ul>
+        </div>
     </div>
+    </scroll>
   </div>
 </template>
 
 <script>
-import {getRecommend} from '@/api/recommend'
+import {getRecommend, getDiscList} from '@/api/recommend'
 import {ERR_OK} from '@/api/config'
 import slider from '@/base/slider/slider'
+import scroll from '@/base/scroll/scroll'
 export default {
   name: 'Recommend',
   components: {
-    slider
+    slider,
+    scroll
   },
   created() {
     this._getRecommend()
+    this._getDiscList()
   },
   data() {
     return {
-      recommends: []
+      recommends: [],
+      discList: []
     }
   },
   methods: {
@@ -42,6 +58,20 @@ export default {
           this.recommends = res.data.slider
         }
       })
+    },
+    _getDiscList() {
+      getDiscList().then((res) => {
+        if (res.code === ERR_OK) {
+          this.discList = res.data.list
+          console.log(this.discList)
+        }
+      })
+    },
+    loadImage() {
+      if (!this.checkLoaded) {
+        this.$refs.scroll.refresh()
+        this.checkLoaded = true
+      }
     }
   }
 }
